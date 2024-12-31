@@ -12,6 +12,9 @@ app.layout = html.Div([
         html.Label("Land Area (acres):"),
         dcc.Slider(id='land-area', min=1, max=10, step=0.1, value=3,
                    marks={i: f"{i} acres" for i in range(1, 11)}),
+        html.Label("Land Cost:"),
+        dcc.Slider(id='land-cost', min=10000, max=200000, step=10000, value=3,
+                   marks={i: f"{i} acres" for i in range(1, 101)}),
         html.Label("Panel Surface Area (sq meters per panel):"),
         dcc.Slider(id='panel-area', min=1, max=10, step=0.1, value=2,
                    marks={i: f"{i} m²" for i in range(1, 11)}),
@@ -49,10 +52,11 @@ app.layout = html.Div([
         Input('land-density', 'value'),
         Input('sunlight-hours', 'value'),
         Input('panel-cost', 'value'),
-        Input('additional-costs', 'value')
+        Input('additional-costs', 'value'),
+        Input('land-cost', 'value')
     ]
 )
-def update_output(land_area_acres, panel_area, panel_power, land_density, sunlight_hours, panel_cost, additional_costs):
+def update_output(land_area_acres, panel_area, panel_power, land_density, sunlight_hours, panel_cost, additional_costs, land_cost):
     # Convert acres to square meters (1 acre = 4046.86 sq meters)
     land_area_m2 = land_area_acres * 4046.86
     land_density_fraction = land_density / 100
@@ -70,7 +74,9 @@ def update_output(land_area_acres, panel_area, panel_power, land_density, sunlig
     annual_revenue = annual_energy * revenue_rate
 
     # Calculate initial cost (panels + additional costs)
-    initial_cost = (num_panels * panel_cost) + additional_costs
+    initial_cost = (num_panels * panel_cost) + additional_costs + land_cost
+    
+    payoff_years = initial_cost / annual_revenue
 
     # Display results
     result_text = (
@@ -79,7 +85,8 @@ def update_output(land_area_acres, panel_area, panel_power, land_density, sunlig
         f"\U0001F50B Total System Capacity: {total_capacity:,.2f} kW\n"
         f"☀️ Daily Energy Production: {daily_energy:,.2f} kWh\n"
         f"\U0001F4B0 Annual Revenue: ${annual_revenue:,.2f}\n"
-        f"\U0001F4B8 Initial Cost: ${initial_cost:,.2f}"
+        f"\U0001F4B8 Initial Cost: ${initial_cost:,.2f}\n"
+        f"Years Until Payoff: {payoff_years:.1f}"
     )
 
     # Create a bar chart to visualize the results

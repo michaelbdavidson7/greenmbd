@@ -26,7 +26,10 @@ app.layout = html.Div([
                    marks={i: f"{i} hrs" for i in range(1, 13)}),
         html.Label("Cost per Panel ($):"),
         dcc.Slider(id='panel-cost', min=100, max=1000, step=10, value=300,
-                   marks={i: f"${i}" for i in range(100, 1100, 100)})
+                   marks={i: f"${i}" for i in range(100, 1100, 100)}),
+        html.Label("Additional Costs (Inverters, Wiring, Labor, etc.) ($):"),
+        dcc.Slider(id='additional-costs', min=1000, max=510000, step=500, value=10000,
+                   marks={i: f"${i:,}" for i in range(10000, 510000, 50000)})
     ], style={"width": "50%", "padding": "20px"}),
 
     html.Div(id='output-results', style={"margin-top": "30px", "font-size": "20px"}),
@@ -45,10 +48,11 @@ app.layout = html.Div([
         Input('panel-power', 'value'),
         Input('land-density', 'value'),
         Input('sunlight-hours', 'value'),
-        Input('panel-cost', 'value')
+        Input('panel-cost', 'value'),
+        Input('additional-costs', 'value')
     ]
 )
-def update_output(land_area_acres, panel_area, panel_power, land_density, sunlight_hours, panel_cost):
+def update_output(land_area_acres, panel_area, panel_power, land_density, sunlight_hours, panel_cost, additional_costs):
     # Convert acres to square meters (1 acre = 4046.86 sq meters)
     land_area_m2 = land_area_acres * 4046.86
     land_density_fraction = land_density / 100
@@ -65,24 +69,24 @@ def update_output(land_area_acres, panel_area, panel_power, land_density, sunlig
     revenue_rate = 0.10  # USD per kWh
     annual_revenue = annual_energy * revenue_rate
 
-    # Calculate initial cost
-    initial_cost = num_panels * panel_cost
+    # Calculate initial cost (panels + additional costs)
+    initial_cost = (num_panels * panel_cost) + additional_costs
 
     # Display results
     result_text = (
-        f"\U0001F333 Land Area: {land_area_acres} acres ({land_area_m2:.2f} m²)\n"
-        f"\U0001F4BB Number of Panels: {num_panels:.0f}\n"
-        f"\U0001F50B Total System Capacity: {total_capacity:.2f} kW\n"
-        f"☀️ Daily Energy Production: {daily_energy:.2f} kWh\n"
-        f"\U0001F4B0 Annual Revenue: ${annual_revenue:.2f}\n"
-        f"\U0001F4B8 Initial Cost: ${initial_cost:.2f}"
+        f"\U0001F333 Land Area: {land_area_acres} acres ({land_area_m2:,.2f} m²)\n"
+        f"\U0001F4BB Number of Panels: {num_panels:,.0f}\n"
+        f"\U0001F50B Total System Capacity: {total_capacity:,.2f} kW\n"
+        f"☀️ Daily Energy Production: {daily_energy:,.2f} kWh\n"
+        f"\U0001F4B0 Annual Revenue: ${annual_revenue:,.2f}\n"
+        f"\U0001F4B8 Initial Cost: ${initial_cost:,.2f}"
     )
 
     # Create a bar chart to visualize the results
     fig = go.Figure()
-    fig.add_trace(go.Bar(x=["Panels", "Capacity (kW)", "Daily Energy (kWh)", "Annual Revenue ($)", "Initial Cost ($)"],
-                         y=[num_panels, total_capacity, daily_energy, annual_revenue, initial_cost],
-                         text=[f"{num_panels:.0f}", f"{total_capacity:.2f}", f"{daily_energy:.2f}", f"${annual_revenue:.2f}", f"${initial_cost:.2f}"],
+    fig.add_trace(go.Bar(x=["Panels", "Capacity (kW)", "Daily Energy (kWh)", "Annual Revenue ($)"],
+                         y=[num_panels, total_capacity, daily_energy, annual_revenue],
+                         text=[f"{num_panels:,.0f}", f"{total_capacity:,.2f}", f"{daily_energy:,.2f}", f"${annual_revenue:,.2f}"],
                          textposition='auto'))
     fig.update_layout(title="Solar Panel System Overview", yaxis_title="Value")
 

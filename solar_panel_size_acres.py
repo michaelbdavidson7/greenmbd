@@ -10,8 +10,8 @@ app.layout = html.Div([
     html.H1("Solar Panel Land Utilization Calculator"),
     html.Div([
         html.Label("Land Area (acres):"),
-        dcc.Slider(id='land-area', min=1, max=10, step=0.1, value=3,
-                   marks={i: f"{i} acres" for i in range(1, 11)}),
+        dcc.Slider(id='land-area', min=1, max=15, step=0.1, value=3,
+                   marks={i: f"{i} acres" for i in range(1, 16)}),
         html.Label("Land Cost:"),
         dcc.Slider(id='land-cost', min=10000, max=200000, step=10000, value=40000,
                    marks={i: f"{i} acres" for i in range(1, 101)}),
@@ -57,20 +57,26 @@ app.layout = html.Div([
     ]
 )
 def update_output(land_area_acres, panel_area, panel_power, land_density, sunlight_hours, panel_cost, additional_costs, land_cost):
-    # Convert acres to square meters (1 acre = 4046.86 sq meters)
-    land_area_m2 = land_area_acres * 4046.86
-    land_density_fraction = land_density / 100
+    # Constants
+    # # Convert acres to square meters (1 acre = 4046.86 sq meters)
+    land_area_m2 = land_area_acres * 4046.86  # Convert acres to square meters
+    land_density_fraction = land_density / 100  # Convert percentage to fraction
+    shading_factor = 0.8  # Fraction of usable area after accounting for shading (e.g., 80%)
+    access_paths_factor = 0.9  # Account for pathways (e.g., 90% of area usable for panels)
+    # Assume a revenue rate (e.g., $0.10 per kWh)
+    revenue_rate = 0.10  # USD per kWh
+
+    # Effective usable land area for panels
+    usable_area_m2 = land_area_m2 * land_density_fraction * shading_factor * access_paths_factor
 
     # Calculate number of panels and system capacity
-    num_panels = (land_area_m2 * land_density_fraction) / panel_area
-    total_capacity = num_panels * panel_power
+    num_panels = usable_area_m2 / panel_area  # Total panels based on panel area
+    total_capacity = num_panels * panel_power  # Total system capacity in watts
 
     # Calculate daily and annual energy production
     daily_energy = total_capacity * sunlight_hours  # kWh per day
     annual_energy = daily_energy * 365  # kWh per year
 
-    # Assume a revenue rate (e.g., $0.10 per kWh)
-    revenue_rate = 0.10  # USD per kWh
     annual_revenue = annual_energy * revenue_rate
 
     # Calculate initial cost (panels + additional costs)

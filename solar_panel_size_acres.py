@@ -30,6 +30,9 @@ app.layout = html.Div([
         html.Label("Cost per Panel ($):"),
         dcc.Slider(id='panel-cost', min=100, max=1000, step=10, value=300,
                    marks={i: f"${i}" for i in range(100, 1100, 100)}),
+        html.Label("Annual Maintenance/Insurance ($):"),
+        dcc.Slider(id='maintenance', min=1000, max=50000, step=5000, value=3000,
+                   marks={i: f"${i}" for i in range(1000, 60000, 3000)}),
         html.Label("Additional Costs (Inverters, Wiring, Labor, etc.) ($):"),
         dcc.Slider(id='additional-costs', min=1000, max=510000, step=500, value=200000,
                    marks={i: f"${i:,}" for i in range(10000, 510000, 50000)})
@@ -52,11 +55,12 @@ app.layout = html.Div([
         Input('land-density', 'value'),
         Input('sunlight-hours', 'value'),
         Input('panel-cost', 'value'),
+        Input('maintenance', 'value'),
         Input('additional-costs', 'value'),
         Input('land-cost', 'value')
     ]
 )
-def update_output(land_area_acres, panel_area, panel_power, land_density, sunlight_hours, panel_cost, additional_costs, land_cost):
+def update_output(land_area_acres, panel_area, panel_power, land_density, sunlight_hours, panel_cost, maintenance, additional_costs, land_cost):
     # Constants
     # # Convert acres to square meters (1 acre = 4046.86 sq meters)
     land_area_m2 = land_area_acres * 4046.86  # Convert acres to square meters
@@ -77,7 +81,7 @@ def update_output(land_area_acres, panel_area, panel_power, land_density, sunlig
     daily_energy = total_capacity * sunlight_hours  # kWh per day
     annual_energy = daily_energy * 365  # kWh per year
 
-    annual_revenue = annual_energy * revenue_rate
+    annual_revenue = (annual_energy * revenue_rate) - maintenance
 
     # Calculate initial cost (panels + additional costs)
     initial_cost = (num_panels * panel_cost) + additional_costs + land_cost

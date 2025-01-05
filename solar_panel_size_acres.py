@@ -1,13 +1,31 @@
 import dash
 from dash import dcc, html, Input, Output
 import plotly.graph_objects as go
+import dash_bootstrap_components as dbc
 
+# Constants
+shading_factor = 0.8  # Fraction of usable area after accounting for shading (e.g., 80%)
+access_paths_factor = 0.9  # Account for pathways (e.g., 90% of area usable for panels)
+# Assume a revenue rate (e.g., $0.10 per kWh)
+revenue_rate = 0.10  # USD per kWh
 # Initialize the Dash app
-app = dash.Dash(__name__)
+app = dash.Dash(__name__, external_stylesheets=[
+    dbc.themes.BOOTSTRAP
+])
 
 # Layout of the app
 app.layout = html.Div([
     html.H1("Solar Panel Land Utilization Calculator"),
+    html.H4([f"Constants: Shading factor: {shading_factor * 100}%",  ]), 
+    html.Div([
+    html.I(className="bi bi-info-circle", id="hover-icon", style={"fontSize": "24px", "cursor": "pointer"}),
+    dbc.Tooltip(
+        "This is a helpful tooltip!",
+        target="hover-icon",
+        placement="right"
+    )
+]),
+    html.H5(f"Access paths factor: {access_paths_factor * 100}%, Revenue rate: {revenue_rate}/kWH (which is high but possible btw)"),
     html.Div([
         html.Label("Land Area (acres):"),
         dcc.Slider(id='land-area', min=1, max=15, step=0.1, value=3,
@@ -40,7 +58,7 @@ app.layout = html.Div([
 
     html.Div(id='output-results', style={"margin-top": "30px", "font-size": "20px"}),
     dcc.Graph(id='capacity-graph')
-])
+], className="container-fluid")
 
 # Callback to update the results and graph
 @app.callback(
@@ -61,15 +79,11 @@ app.layout = html.Div([
     ]
 )
 def update_output(land_area_acres, panel_area, panel_power, land_density, sunlight_hours, panel_cost, maintenance, additional_costs, land_cost):
-    # Constants
+    
+
     # # Convert acres to square meters (1 acre = 4046.86 sq meters)
     land_area_m2 = land_area_acres * 4046.86  # Convert acres to square meters
     land_density_fraction = land_density / 100  # Convert percentage to fraction
-    shading_factor = 0.8  # Fraction of usable area after accounting for shading (e.g., 80%)
-    access_paths_factor = 0.9  # Account for pathways (e.g., 90% of area usable for panels)
-    # Assume a revenue rate (e.g., $0.10 per kWh)
-    revenue_rate = 0.10  # USD per kWh
-
     # Effective usable land area for panels
     usable_area_m2 = land_area_m2 * land_density_fraction * shading_factor * access_paths_factor
 

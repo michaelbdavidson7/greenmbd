@@ -16,16 +16,29 @@ app = dash.Dash(__name__, external_stylesheets=[
 # Layout of the app
 app.layout = html.Div([
     html.H1("Solar Panel Land Utilization Calculator"),
-    html.H4([f"Constants: Shading factor: {shading_factor * 100}%",  ]), 
-    html.Div([
+    html.H4(f"Constants:"),
+    html.H5([f"Shading factor: {shading_factor * 100}% ",
     html.I(className="bi bi-info-circle", id="hover-icon", style={"fontSize": "24px", "cursor": "pointer"}),
     dbc.Tooltip(
-        "This is a helpful tooltip!",
+        "This is an example multiplier when factoring in the shading of other panels/distant trees",
         target="hover-icon",
         placement="right"
-    )
+    ),
+    f" Access paths factor: {access_paths_factor * 100}% ",
+        html.I(className="bi bi-info-circle", id="hover-icon2", style={"fontSize": "24px", "cursor": "pointer"}),
+    dbc.Tooltip(
+        "Access paths are ways to get around the farm, some space must be made for these",
+        target="hover-icon2",
+        placement="right"
+    ), 
+    f" Revenue rate: {revenue_rate}/kWH ",
+        html.I(className="bi bi-info-circle", id="hover-icon3", style={"fontSize": "24px", "cursor": "pointer"}),
+    dbc.Tooltip(
+        "$0.10 cents is generally high and unachieveable in grade A sunshine states due to oversaturation, but in grade B and lower its still available. ",
+        target="hover-icon3",
+        placement="right"
+    ), 
 ]),
-    html.H5(f"Access paths factor: {access_paths_factor * 100}%, Revenue rate: {revenue_rate}/kWH (which is high but possible btw)"),
     html.Div([
         html.Label("Land Area (acres):"),
         dcc.Slider(id='land-area', min=1, max=15, step=0.1, value=3,

@@ -31,7 +31,7 @@ app.layout = html.Div([
         target="hover-icon2",
         placement="right"
     ), 
-    f" Revenue rate: {revenue_rate}/kWH ",
+    f" Revenue rate: $", html.Span(id="revenue-rate"), "/kWH ",
         html.I(className="bi bi-info-circle", id="hover-icon3", style={"fontSize": "24px", "cursor": "pointer"}),
     dbc.Tooltip(
         "$0.10 cents is generally high and unachieveable in grade A sunshine states due to oversaturation, but in grade B and lower its still available. ",
@@ -64,6 +64,9 @@ app.layout = html.Div([
         html.Label("Annual Maintenance/Insurance ($):"),
         dcc.Slider(id='maintenance', min=1000, max=50000, step=5000, value=3000,
                    marks={i: f"${i}" for i in range(1000, 60000, 3000)}),
+        html.Label("Revenue per kWH ($):"),
+        dcc.Slider(id='kwh-payment', min=0, max=0.50, step=0.01, value=.05,
+                   marks={round(i, 2): str(round(i, 2)) for i in [x / 100 for x in range(0, 101, 5)]}),
         html.Label("Additional Costs (Inverters, Wiring, Labor, etc.) ($):"),
         dcc.Slider(id='additional-costs', min=1000, max=510000, step=500, value=200000,
                    marks={i: f"${i:,}" for i in range(10000, 510000, 50000)})
@@ -77,6 +80,7 @@ app.layout = html.Div([
 @app.callback(
     [
         Output('output-results', 'children'),
+        Output('revenue-rate', 'children'),
         Output('capacity-graph', 'figure')
     ],
     [
@@ -87,11 +91,12 @@ app.layout = html.Div([
         Input('sunlight-hours', 'value'),
         Input('panel-cost', 'value'),
         Input('maintenance', 'value'),
+        Input('kwh-payment', 'value'),
         Input('additional-costs', 'value'),
         Input('land-cost', 'value')
     ]
 )
-def update_output(land_area_acres, panel_area, panel_power, land_density, sunlight_hours, panel_cost, maintenance, additional_costs, land_cost):
+def update_output(land_area_acres, panel_area, panel_power, land_density, sunlight_hours, panel_cost, maintenance, kwh_payment, additional_costs, land_cost):
     
 
     # # Convert acres to square meters (1 acre = 4046.86 sq meters)
@@ -108,7 +113,7 @@ def update_output(land_area_acres, panel_area, panel_power, land_density, sunlig
     daily_energy = total_capacity * sunlight_hours  # kWh per day
     annual_energy = daily_energy * 365  # kWh per year
 
-    annual_revenue = (annual_energy * revenue_rate) - maintenance
+    annual_revenue = (annual_energy * kwh_payment) - maintenance
 
     # Calculate initial cost (panels + additional costs)
     initial_cost = (num_panels * panel_cost) + additional_costs + land_cost
@@ -122,6 +127,7 @@ def update_output(land_area_acres, panel_area, panel_power, land_density, sunlig
         f"\U0001F50B Total System Capacity: {total_capacity:,.2f} kW\n"
         f"☀️ Daily Energy Production: {daily_energy:,.2f} kWh\n"
         f"\U0001F4B0 Annual Revenue: ${annual_revenue:,.2f}\n"
+        f"⚡️ kWH Payment: ${kwh_payment:,.2f}\n"
         f"\U0001F4B8 Initial Cost: ${initial_cost:,.2f}\n"
         f"Years Until Payoff: {payoff_years:.1f}"
     )
@@ -134,7 +140,7 @@ def update_output(land_area_acres, panel_area, panel_power, land_density, sunlig
                          textposition='auto'))
     fig.update_layout(title="Solar Panel System Overview", yaxis_title="Value")
 
-    return result_text.replace("\n", "  |  "), fig
+    return result_text.replace("\n", "  |  "), str(kwh_payment), fig
 
 # Run the app
 if __name__ == '__main__':

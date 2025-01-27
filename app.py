@@ -1,3 +1,4 @@
+import os
 import dash
 from dash import dcc, html, Input, Output
 import plotly.graph_objects as go
@@ -13,6 +14,9 @@ app = dash.Dash(__name__, external_stylesheets=[
     dbc.themes.BOOTSTRAP
 ])
 
+# Check if running inside Docker
+if os.environ.get("IN_DOCKER"):
+    server = app.server  # Required for Gunicorn inside Docker
 # Layout of the app
 app.layout = html.Div([
     html.H1("Solar Panel Land Utilization Calculator"),

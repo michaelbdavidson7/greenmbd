@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  greenmbd.com:
+    image: ghcr.io/michaelbdavidson7/greenmbd.com:latest  # Change to your actual image
+    container_name: greenmbd.com
+    restart: always
+    ports:
+      - "8050:8050"
+    environment:
+      - APP_ENV=production
+    networks:
+      - app-network
+      
+networks:
+  app-network:
+    driver: bridge

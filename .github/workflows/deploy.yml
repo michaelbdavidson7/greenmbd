@@ -32,5 +32,14 @@ jobs:
     needs: build-and-push
     runs-on: ubuntu-latest
     steps:
-      - name: Deploy container (modify as needed)
-        run: echo "Deploy step goes here"
+      - name: SSH into DigitalOcean and deploy
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            cd /var/www/greenmbd
+            docker-compose pull
+            docker-compose down
+            docker-compose up -d

@@ -17,6 +17,10 @@ app = dash.Dash(__name__, external_stylesheets=[
 # Check if running inside Docker
 if os.environ.get("IN_DOCKER"):
     server = app.server  # Required for Gunicorn inside Docker
+    
+# Ensure Dash knows it's behind a reverse proxy
+if "DYNO" in os.environ or "IN_DOCKER" in os.environ:
+    app.server.config['PREFERRED_URL_SCHEME'] = 'https'
 # Layout of the app
 app.layout = html.Div([
     html.H1("Solar Panel Land Utilization Calculator"),

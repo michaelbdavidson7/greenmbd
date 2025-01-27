@@ -39,7 +39,7 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
           script: |
-            cd /var/www/greenmbd
+            cd /var/www/greenmbd.com
             docker-compose pull
             docker-compose down
             docker-compose up -d

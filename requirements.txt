@@ -1,3 +1,5 @@
 dash
-plotly
 dash-bootstrap-components
+flask
+gunicorn
+plotly

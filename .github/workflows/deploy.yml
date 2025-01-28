@@ -1,9 +1,12 @@
-name: Deploy Dash App
+name: Deploy Docker Image to DigitalOcean
 
 on:
   push:
     branches:
       - master
+
+env:
+  SITE_NAME: greenmbd.com
 
 jobs:
   build-and-push:
@@ -20,12 +23,12 @@ jobs:
 
       - name: Build and tag Docker image
         run: |
-          IMAGE_NAME=ghcr.io/${{ github.repository_owner }}/greenmbd.com
+          IMAGE_NAME=ghcr.io/${{ github.repository_owner }}/${{ env.SITE_NAME }}
           docker build -t $IMAGE_NAME:latest .
 
       - name: Push Docker image
         run: |
-          IMAGE_NAME=ghcr.io/${{ github.repository_owner }}/greenmbd.com
+          IMAGE_NAME=ghcr.io/${{ github.repository_owner }}/${{ env.SITE_NAME }}
           docker push $IMAGE_NAME:latest
 
   deploy:
@@ -39,7 +42,21 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
           script: |
-            cd /var/www/greenmbd.com
+            cd /var/www/${{ env.SITE_NAME }}
             docker-compose pull
             docker-compose down
             docker-compose up -d
+
+  post-deploy:
+    needs: deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: SSH into DigitalOcean and clear the docker image cache
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            cd /var/www/${{ env.SITE_NAME }}
+            docker system prune -a --force

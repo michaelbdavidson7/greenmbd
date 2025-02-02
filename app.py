@@ -163,10 +163,19 @@ def update_output(land_area_acres, panel_area, panel_power, land_density, sunlig
     ]
 )
 def update_labels(land_area_acres):
-    return (html.Div([
-        "Land Area (acres): ",
-        html.Strong(land_area_acres)
-    ]),)
+    return (badge_factory("Land Area (acres): ", land_area_acres),
+            )
+    
+def badge_factory(label:str, value):
+    return html.Div([
+        label,
+        dbc.Badge(
+            html.Strong(value),
+            color="white",
+            text_color="primary",
+            className="border me-1",
+        )
+    ])
 
 # Run the app
 if __name__ == '__main__':

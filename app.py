@@ -21,6 +21,10 @@ if os.environ.get("IN_DOCKER"):
 # REMOVE any HTTPS enforcement since Apache is handling it
 if "IN_DOCKER" in os.environ or "DYNO" in os.environ:
     del app.server.config['PREFERRED_URL_SCHEME']  # Remove HTTPS enforcement
+    
+# Specific marks
+land_area_marks = {i: str(i) for i in range(1, 11)}
+land_area_marks.update({i: str(i) for i in range(20, 81, 10)})
 # Layout of the app
 app.layout = html.Div([
     html.H1("Solar Panel Land Utilization Calculator"),
@@ -48,11 +52,11 @@ app.layout = html.Div([
     ), 
 ]),
     html.Div([
-        html.Label("Land Area (acres):"),
-        dcc.Slider(id='land-area', min=1, max=15, step=0.1, value=3,
-                   marks={i: f"{i} acres" for i in range(1, 16)}),
+        html.Label(id='land-acres-value'),
+        dcc.Slider(id='land-area-acres', min=1, max=80, value=13, step=1,
+                   marks=land_area_marks),
         html.Label("Land Cost:"),
-        dcc.Slider(id='land-cost', min=10000, max=200000, step=10000, value=40000,
+        dcc.Slider(id='land-cost', min=10000, max=200000, step=10000, value=90000,
                    marks={i: f"{i} acres" for i in range(1, 101)}),
         html.Label("Panel Surface Area (sq meters per panel):"),
         dcc.Slider(id='panel-area', min=1, max=10, step=0.1, value=2,
@@ -67,7 +71,7 @@ app.layout = html.Div([
         dcc.Slider(id='sunlight-hours', min=1, max=12, step=0.1, value=3.8,
                    marks={i: f"{i} hrs" for i in range(1, 13)}),
         html.Label("Cost per Panel ($):"),
-        dcc.Slider(id='panel-cost', min=100, max=1000, step=10, value=300,
+        dcc.Slider(id='panel-cost', min=100, max=1000, step=10, value=200,
                    marks={i: f"${i}" for i in range(100, 1100, 100)}),
         html.Label("Annual Maintenance/Insurance ($):"),
         dcc.Slider(id='maintenance', min=1000, max=50000, step=5000, value=3000,
@@ -92,7 +96,7 @@ app.layout = html.Div([
         Output('capacity-graph', 'figure')
     ],
     [
-        Input('land-area', 'value'),
+        Input('land-area-acres', 'value'),
         Input('panel-area', 'value'),
         Input('panel-power', 'value'),
         Input('land-density', 'value'),
@@ -149,6 +153,20 @@ def update_output(land_area_acres, panel_area, panel_power, land_density, sunlig
     fig.update_layout(title="Solar Panel System Overview", yaxis_title="Value")
 
     return result_text.replace("\n", "  |  "), str(kwh_payment), fig
+
+@app.callback(
+    [
+        Output('land-acres-value', 'children')
+    ],
+    [
+        Input('land-area-acres', 'value')
+    ]
+)
+def update_labels(land_area_acres):
+    return (html.Div([
+        "Land Area (acres): ",
+        html.Strong(land_area_acres)
+    ]),)
 
 # Run the app
 if __name__ == '__main__':

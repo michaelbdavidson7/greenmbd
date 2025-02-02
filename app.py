@@ -82,9 +82,9 @@ app.layout = html.Div([
         html.Label(id="additional-costs-value"),
         dcc.Slider(id='additional-costs', min=1000, max=510000, step=500, value=200000,
                    marks={i: f"${i:,}" for i in range(10000, 510000, 50000)})
-    ], style={"width": "50%", "padding": "20px"}),
+    ], style={"width": "50%", "padding": "20px", 'display': 'inline-block'}),
 
-    html.Div(id='output-results', style={"margin-top": "30px", "font-size": "20px"}),
+    html.Div(id='output-results', style={"margin-top": "30px", "font-size": "20px", 'width': '25%', 'display': 'inline-block', 'vertical-align': 'top'}),
     dcc.Graph(id='capacity-graph')
 ], className="container-fluid")
 
@@ -141,9 +141,26 @@ def update_output(land_area_acres, panel_area, panel_power, land_density, sunlig
         f"\U0001F4B0 Annual Revenue: ${annual_revenue:,.2f}\n"
         f"⚡️ kWH Payment: ${kwh_payment:,.2f}\n"
         f"\U0001F4B8 Initial Cost: ${initial_cost:,.2f}\n"
-        f"Years Until Payoff: {payoff_years:.1f}"
+        f"📆 Years Until Payoff: {payoff_years:.1f}"
     )
-
+    summary_text = html.Div([
+        html.P(f"🌲 Land Area: {land_area_acres} acres ({land_area_m2:,.2f} m²)"),
+        html.P(f"💻 Number of Panels: {num_panels:,.0f}"),
+        html.P(f"🔋 Total System Capacity: {total_capacity:,.2f} kW"),
+        html.P(f"☀️ Daily Energy Production: {daily_energy:,.2f} kWh"),
+        html.P([f"💰", html.Strong(f"Annual Revenue: ${annual_revenue:,.2f}")]),
+        html.P(f"⚡️ kWH Payment: ${kwh_payment:,.2f}"),
+        html.P(f"💸 Initial Cost: ${initial_cost:,.2f}"),
+        html.P([f"📆 ", html.Strong(f"Years Until Payoff: {payoff_years:.1f}")]),
+    ], style={
+        'border': '1px solid #ddd',
+        'padding': '15px',
+        'margin-left': '20px',
+        'width': '500px',
+        'background-color': '#f9f9f9',
+        'border-radius': '8px',
+        'box-shadow': '2px 2px 10px rgba(0, 0, 0, 0.1)'
+    })
     # Create a bar chart to visualize the results
     fig = go.Figure()
     fig.add_trace(go.Bar(x=["Panels", "Capacity (kW)", "Daily Energy (kWh)", "Annual Revenue ($)"],
@@ -152,7 +169,7 @@ def update_output(land_area_acres, panel_area, panel_power, land_density, sunlig
                          textposition='auto'))
     fig.update_layout(title="Solar Panel System Overview", yaxis_title="Value")
 
-    return result_text.replace("\n", "  |  "), str(kwh_payment), fig
+    return summary_text, str(kwh_payment), fig
 
 @app.callback(
     [

@@ -3,6 +3,7 @@ import dash
 from dash import dcc, html, Input, Output
 import plotly.graph_objects as go
 import dash_bootstrap_components as dbc
+import pandas as pd
 
 # Constants
 shading_factor = 0.8  # Fraction of usable area after accounting for shading (e.g., 80%)
@@ -25,6 +26,24 @@ if "IN_DOCKER" in os.environ or "DYNO" in os.environ:
 # Specific marks
 land_area_marks = {i: str(i) for i in range(1, 11)}
 land_area_marks.update({i: str(i) for i in range(20, 81, 10)})
+sunlight_df = pd.read_csv("data/List_of_cities_by_sunshine_duration_4.csv")
+sunlight_df = sunlight_df.sort_values(["Country", "City"])
+city_options = [
+    {'label': f"{row['Country']}, {row['City']}", 'value': row['avg']}
+    for _, row in sunlight_df.iterrows()
+]
+# city dropdown component
+city_dropdown = html.Div([
+    html.Label("Select a City for Average Sunlight Hours:"),
+    dcc.Dropdown(
+    id='city-dropdown',
+    options=city_options,
+    placeholder="Choose a city...",
+    style={"width": "50%"}
+)
+    ], style={"padding": "20px"}) # type: ignore
+
+
 # Layout of the app
 app.layout = html.Div([
     html.H1("Solar Panel Land Utilization Calculator"),
@@ -67,6 +86,7 @@ app.layout = html.Div([
         html.Label(id="land-density-value"),
         dcc.Slider(id='land-density', min=50, max=90, step=1, value=60,
                    marks={i: f"{i}%" for i in range(50, 91, 5)}),
+        city_dropdown, 
         html.Label(id="sunlight-hours-value"),
         dcc.Slider(id='sunlight-hours', min=1, max=12, step=0.1, value=5.8,
                    marks={i: f"{i} hrs" for i in range(1, 13)}),
@@ -74,7 +94,7 @@ app.layout = html.Div([
         dcc.Slider(id='panel-cost', min=100, max=1000, step=10, value=100,
                    marks={i: f"${i}" for i in range(100, 1100, 100)}),
         html.Label(id="maintenance-value"),
-        dcc.Slider(id='maintenance', min=0, max=150000, step=15000, value=110000,
+        dcc.Slider(id='maintenance', min=0, max=150000, step=15000, value=105000,
                    marks={i: f"${i}" for i in range(0, 150000, 15000)}),
         html.Label(id="kwh-payment-value"),
         dcc.Slider(id='kwh-payment', min=0, max=0.50, step=0.01, value=.06,
@@ -231,6 +251,17 @@ def badge_factory(label:str, value, value_post_script=""):
         )
     ])
 
+
+@app.callback(
+    Output('sunlight-hours', 'value'),
+    Input('city-dropdown', 'value'),
+    prevent_initial_call=True
+)
+def update_sunlight_from_city(city_sunlight_hours):
+    print("Dropdown selected:", city_sunlight_hours)
+    if city_sunlight_hours:
+        return round(city_sunlight_hours, 1)
+    return dash.no_update
 # Run the app
 if __name__ == '__main__':
     app.run_server(debug=True)

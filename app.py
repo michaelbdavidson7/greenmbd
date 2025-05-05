@@ -32,12 +32,16 @@ city_options = [
     {'label': f"{row['Country']}, {row['City']}", 'value': row['avg']}
     for _, row in sunlight_df.iterrows()
 ]
+default = "United States, Cleveland"
+default_value = city_options[0]['value'] if city_options else None
+
 # city dropdown component
 city_dropdown = html.Div([
     html.Label("Select a City for Average Sunlight Hours:"),
     dcc.Dropdown(
     id='city-dropdown',
     options=city_options,
+    value=default_value,
     placeholder="Choose a city...",
     style={"width": "50%"}
 )
@@ -101,7 +105,10 @@ app.layout = html.Div([
                    marks={round(i, 2): str(round(i, 2)) for i in [x / 100 for x in range(0, 101, 5)]}),
         html.Label(id="additional-costs-value"),
         dcc.Slider(id='additional-costs', min=1000, max=510000, step=500, value=200000,
-                   marks={i: f"${i:,}" for i in range(10000, 510000, 50000)})
+                   marks={i: f"${i:,}" for i in range(10000, 510000, 50000)}),
+        html.Label(id="contingency-percent-value"),
+        dcc.Slider(id='contingency-percent', min=0, max=100, step=5, value=15,
+                   marks={i: f"{i}%" for i in range(5, 101, 5)}),
     ], style={"width": "50%", "padding": "20px", 'display': 'inline-block'}),
 
     html.Div(id='output-results', style={"margin-top": "30px", "font-size": "20px", 'width': '25%', 'display': 'inline-block', 'vertical-align': 'top'}),
@@ -125,10 +132,12 @@ app.layout = html.Div([
         Input('maintenance', 'value'),
         Input('kwh-payment', 'value'),
         Input('additional-costs', 'value'),
-        Input('land-cost', 'value')
+        Input('land-cost', 'value'),
+        Input('contingency-percent', 'value'),
+        
     ]
 )
-def update_output(land_area_acres, panel_area, panel_power, land_density, sunlight_hours, panel_cost, maintenance, kwh_payment, additional_costs, land_cost):
+def update_output(land_area_acres, panel_area, panel_power, land_density, sunlight_hours, panel_cost, maintenance, kwh_payment, additional_costs, land_cost, contingency_percent):
     
 
     # # Convert acres to square meters (1 acre = 4046.86 sq meters)
@@ -149,6 +158,8 @@ def update_output(land_area_acres, panel_area, panel_power, land_density, sunlig
 
     # Calculate initial cost (panels + additional costs)
     initial_cost = (num_panels * panel_cost) + additional_costs + land_cost
+    # add contingency percent
+    initial_cost = initial_cost + (initial_cost * (contingency_percent / 100))
     
     payoff_years = initial_cost / annual_revenue
 
@@ -203,6 +214,7 @@ def update_output(land_area_acres, panel_area, panel_power, land_density, sunlig
         Output('maintenance-value', 'children'),
         Output('kwh-payment-value', 'children'),
         Output('additional-costs-value', 'children'),
+        Output('contingency-percent-value', 'children'),
     ],
     [
         Input('land-area-acres', 'value'),
@@ -215,6 +227,7 @@ def update_output(land_area_acres, panel_area, panel_power, land_density, sunlig
         Input('maintenance', 'value'),
         Input('kwh-payment', 'value'),
         Input('additional-costs', 'value'),
+        Input('contingency-percent', 'value'),
     ]
 )
 def update_labels(land_area_acres, 
@@ -226,7 +239,8 @@ def update_labels(land_area_acres,
                   panel_cost,
                   maintenance,
                   kwh_payment,
-                  additional_costs):
+                  additional_costs,
+                  contingency_percent):
     return (
         badge_factory("Land Area ", str(land_area_acres) + " (acres)"),
         badge_factory("Land Cost ", f"${land_cost}"),
@@ -238,6 +252,7 @@ def update_labels(land_area_acres,
         badge_factory("Annual Maintenance/Insurance ", f"${maintenance}/year"),
         badge_factory("Revenue per kWH ", f"${kwh_payment}"),
         badge_factory("Additional Costs (Inverters, Wiring, Labor, etc.) ", f"${additional_costs}"),
+        badge_factory("Contingency Percent:  ", f"{contingency_percent}%"),
             )
     
 def badge_factory(label:str, value, value_post_script=""):
